@@ -418,7 +418,7 @@ async def convert(ctx,*,arg):
     translation = translator.translate(arg)
     await ctx.send(translation)
 
-openai.api_key = "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"
+openai.api_key = "ENTER_KEY"
 
 @bot.command(pass_context=True)
 async def draw(ctx,*,arg):
