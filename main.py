@@ -1,21 +1,16 @@
-import discord
-import database
-import os
-import json
-import re
-import openai
-from discord.ext import commands
-from database import *
-from flask import Flask, redirect, url_for
-from threading import Thread
-from translate import Translator
-
-
-
 intents = discord.Intents.all()
 intents.typing = True
 
 intents.members = True
+
+def generate_response(prompt):
+    response = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt=prompt,
+        max_tokens=1024,
+        temperature=0.5,
+    )
+    return response.choices[0].text.strip()
 
 
 
@@ -423,7 +418,7 @@ async def convert(ctx,*,arg):
     translation = translator.translate(arg)
     await ctx.send(translation)
 
-openai.api_key = "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"
+openai.api_key = "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"
 
 @bot.command(pass_context=True)
 async def draw(ctx,*,arg):
@@ -434,9 +429,43 @@ async def draw(ctx,*,arg):
         await ctx.send(e)
 #@bot.command(pass_context = True)
 #async def shit(ctx,*,arg):
+@bot.command(pass_context=True,name="role")
+async def role(ctx, role: discord.Role):
+    if role in ctx.author.roles:
+        await ctx.author.remove_roles(role)
+        await ctx.send("Role removed")
+    else:
+        await ctx.author.add_roles(role)
+        await ctx.send("Role Added")
 
+@bot.command(pass_context=True)
+async def gpt(ctx,*,ui) :
+    try:
+
+        prompt = ui
+        response = generate_response(ui)
+        await ctx.send(str(response))
+
+    except Exception as e:
+        await ctx.send(e)
+@bot.command(pass_context=True)
+async def scores(ctx):
+    try:
+        conn = http.client.HTTPSConnection("ultimate-tennis1.p.rapidapi.com")
+        headers = {
+        'X-RapidAPI-Key': "b8b5f8a3b2msh5b764631833c5a2p1ac28fjsnae5e627cd4fe",
+        'X-RapidAPI-Host': "ultimate-tennis1.p.rapidapi.com"
+        }
+        conn.request("GET", "/live_leaderboard/10", headers=headers)
+        res = conn.getresponse()
+        data = res.read()
+        con = data.decode("utf-8")
+        await ctx.send(con)
+    except Exception as e:
+        await ctx.send(e)
 
     
 
-bot.run("MTA1MDQ3NDI4Mjg0MjU5NTQyOA.Gv6VmN.o-cF0W8AywhdwN2M64EZIt_fG0oCA3UEzBKJZM")
+
+bot.run("MTA1MDQ3NDI4Mjg0MjU5NTQyOA.GhMPnf._9-DAlmoCtih-Xg-xTNuo6-YfGzFNTya-Eayjw")
 #bot.run("NzgzOTA4OTY5MjY5NTU5Mjk2.GZqxij.YyQWVWQPSZrp-7WLs4fAZjuUPINi5M1IiiKsto")
