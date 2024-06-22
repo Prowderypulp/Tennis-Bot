@@ -1,33 +1,39 @@
+import discord
+import database
+import subprocess
+import json
+import re
+from discord.ext import commands
+from database import *
+import sys
+#from flask import Flask, redirect, url_for
+from threading import Thread
+from translate import Translator
+sys.path.append('Scrap')
+from selenium import webdriver
+from selenium.webdriver.common import options
+from selenium.webdriver.common.by import By
+from datetime import date
+from selenium.webdriver.firefox.options import Options
+from PIL import Image
+import PIL
+
+
+
 intents = discord.Intents.all()
 intents.typing = True
 
 intents.members = True
 
-def generate_response(prompt):
-    response = openai.Completion.create(
-        engine="text-davinci-002",
-        prompt=prompt,
-        max_tokens=1024,
-        temperature=0.5,
-    )
-    return response.choices[0].text.strip()
+
+
+#app = Flask('')
 
 
 
-app = Flask('')
-
-@app.route('/')
-def main():
-  return "Your Bot Is Ready"
-
-def run():
-  app.run(host="0.0.0.0", port=8000)
-
-def keep_alive():
-  server = Thread(target=run)
-  server.start()
-
-translator = Translator(to_lang = "es")
+#translator = Translator(to_lang = "es")
+#dir = subprocess.run(['echo', '$PWD'], capture_output=True, encoding='utf-8')
+#print(dir)
 
 bot = commands.Bot(command_prefix="+",intents=intents)
 
@@ -413,13 +419,6 @@ async def purge(ctx, amount:int = 0):
     else:
         await channel.send("Please enter a value less than 30")
 
-@bot.command(pass_context = True, aliases=['conv','c'])
-async def convert(ctx,*,arg):  
-    translation = translator.translate(arg)
-    await ctx.send(translation)
-
-openai.api_key = "ENTER_KEY"
-
 @bot.command(pass_context=True)
 async def draw(ctx,*,arg):
     try:
@@ -448,24 +447,28 @@ async def gpt(ctx,*,ui) :
 
     except Exception as e:
         await ctx.send(e)
-@bot.command(pass_context=True)
-async def scores(ctx):
-    try:
-        conn = http.client.HTTPSConnection("ultimate-tennis1.p.rapidapi.com")
-        headers = {
-        'X-RapidAPI-Key': "b8b5f8a3b2msh5b764631833c5a2p1ac28fjsnae5e627cd4fe",
-        'X-RapidAPI-Host': "ultimate-tennis1.p.rapidapi.com"
-        }
-        conn.request("GET", "/live_leaderboard/10", headers=headers)
-        res = conn.getresponse()
-        data = res.read()
-        con = data.decode("utf-8")
-        await ctx.send(con)
-    except Exception as e:
-        await ctx.send(e)
-
     
+@bot.command(pass_context=True)
+async def atpscores(ctx):
+
+    option = Options()
+    #try:
+       # subprocess.run(['rm','Element.png'])
+    #except:
+        #pass
+
+    option.add_argument("--headless")
+    driver = webdriver.Firefox(options=option)
+    col = subprocess.run("pwd", capture_output=True, text=True)
+    dir = col.stdout
+    url = "http://m.espn.com/general/tennis/dailyresults"
+    driver.get(url)
+    element = driver.find_element(By.CLASS_NAME, "tournament")
+    element.screenshot('Element.png')
+    print("Taken")
+    driver.quit()
+
+    await ctx.send(file=discord.File(dir + "/Element.png"))
 
 
-bot.run("MTA1MDQ3NDI4Mjg0MjU5NTQyOA.GhMPnf._9-DAlmoCtih-Xg-xTNuo6-YfGzFNTya-Eayjw")
-#bot.run("NzgzOTA4OTY5MjY5NTU5Mjk2.GZqxij.YyQWVWQPSZrp-7WLs4fAZjuUPINi5M1IiiKsto")
+bot.run("TOKEN")
